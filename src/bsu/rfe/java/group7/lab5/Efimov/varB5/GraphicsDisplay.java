@@ -84,4 +84,55 @@ public class GraphicsDisplay extends JPanel {
 
         this.zoomToRegion(this.minX, this.maxY, this.maxX, this.minY);
     }
+    public void zoomToRegion(double x1, double y1, double x2, double y2) {
+        this.viewport[0][0] = x1;
+        this.viewport[0][1] = y1;
+        this.viewport[1][0] = x2;
+        this.viewport[1][1] = y2;
+        this.repaint();
+    }
+
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        this.scaleX = this.getSize().getWidth() / (this.viewport[1][0] - this.viewport[0][0]);
+        this.scaleY = this.getSize().getHeight() / (this.viewport[0][1] - this.viewport[1][1]);
+        if (this.graphicsData != null && this.graphicsData.size() != 0) {
+            Graphics2D canvas = (Graphics2D)g;
+            this.paintGrid(canvas);
+            this.paintAxis(canvas);
+            this.paintGraphics(canvas);
+            this.paintMarkers(canvas);
+            this.paintLabels(canvas);
+            this.paintSelection(canvas);
+        }
+    }
+
+    private void paintSelection(Graphics2D canvas) {
+        if (this.scaleMode) {
+            canvas.setStroke(this.selectionStroke);
+            canvas.setColor(Color.BLACK);
+            canvas.draw(this.selectionRect);
+        }
+    }
+
+    private void paintGraphics(Graphics2D canvas) {
+        canvas.setStroke(this.markerStroke);
+        canvas.setColor(Color.RED);
+        Double currentX = null;
+        Double currentY = null;
+        Iterator var5 = this.graphicsData.iterator();
+
+        while(var5.hasNext()) {
+            Double[] point = (Double[])var5.next();
+            if (point[0] >= this.viewport[0][0] && point[1] <= this.viewport[0][1] && point[0] <= this.viewport[1][0] && point[1] >= this.viewport[1][1]) {
+                if (currentX != null && currentY != null) {
+                    canvas.draw(new java.awt.geom.Line2D.Double(this.translateXYtoPoint(currentX, currentY), this.translateXYtoPoint(point[0], point[1])));
+                }
+
+                currentX = point[0];
+                currentY = point[1];
+            }
+        }
+
+    }
 }
