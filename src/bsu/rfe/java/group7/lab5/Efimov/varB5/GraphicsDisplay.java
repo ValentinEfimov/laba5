@@ -303,5 +303,56 @@ public class GraphicsDisplay extends JPanel {
     public void reset() {
         this.displayGraphics(this.originalData);
     }
+    public class MouseHandler extends MouseAdapter {
+        public MouseHandler() {
+        }
+
+        public void mouseClicked(MouseEvent ev) {
+            if (ev.getButton() == 3) {
+                if (GraphicsDisplay.this.undoHistory.size() > 0) {
+                    GraphicsDisplay.this.viewport = (double[][])GraphicsDisplay.this.undoHistory.get(GraphicsDisplay.this.undoHistory.size() - 1);
+                    GraphicsDisplay.this.undoHistory.remove(GraphicsDisplay.this.undoHistory.size() - 1);
+                } else {
+                    GraphicsDisplay.this.zoomToRegion(GraphicsDisplay.this.minX, GraphicsDisplay.this.maxY, GraphicsDisplay.this.maxX, GraphicsDisplay.this.minY);
+                }
+
+                GraphicsDisplay.this.repaint();
+            }
+
+        }
+
+        public void mousePressed(MouseEvent ev) {
+            if (ev.getButton() == 1) {
+                GraphicsDisplay.this.selectedMarker = GraphicsDisplay.this.findSelectedPoint(ev.getX(), ev.getY());
+                GraphicsDisplay.this.originalPoint = GraphicsDisplay.this.translatePointToXY(ev.getX(), ev.getY());
+                if (GraphicsDisplay.this.selectedMarker >= 0) {
+                    GraphicsDisplay.this.changeMode = true;
+                    GraphicsDisplay.this.setCursor(Cursor.getPredefinedCursor(8));
+                } else {
+                    GraphicsDisplay.this.scaleMode = true;
+                    GraphicsDisplay.this.setCursor(Cursor.getPredefinedCursor(5));
+                    GraphicsDisplay.this.selectionRect.setFrame((double)ev.getX(), (double)ev.getY(), 1.0D, 1.0D);
+                }
+
+            }
+        }
+
+        public void mouseReleased(MouseEvent ev) {
+            if (ev.getButton() == 1) {
+                GraphicsDisplay.this.setCursor(Cursor.getPredefinedCursor(0));
+                if (GraphicsDisplay.this.changeMode) {
+                    GraphicsDisplay.this.changeMode = false;
+                } else {
+                    GraphicsDisplay.this.scaleMode = false;
+                    double[] finalPoint = GraphicsDisplay.this.translatePointToXY(ev.getX(), ev.getY());
+                    GraphicsDisplay.this.undoHistory.add(GraphicsDisplay.this.viewport);
+                    GraphicsDisplay.this.viewport = new double[2][2];
+                    GraphicsDisplay.this.zoomToRegion(GraphicsDisplay.this.originalPoint[0], GraphicsDisplay.this.originalPoint[1], finalPoint[0], finalPoint[1]);
+                    GraphicsDisplay.this.repaint();
+                }
+
+            }
+        }
+    }
 
 }
